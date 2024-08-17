@@ -1,4 +1,5 @@
 import re
+import os
 from ctypes import cast, POINTER
 from comtypes import CLSCTX_ALL
 from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
@@ -30,7 +31,7 @@ commands = {
     "уменьши громкость": lambda: change_volume(-10),
 }
 
-def execute_command(command):
+def execute_command(command, app):
     if command in commands:
         print(f"Выполняется команда: {command}")
         commands[command]()
@@ -39,5 +40,16 @@ def execute_command(command):
         if match:
             level = int(match.group(1))
             set_volume(level)
+        elif command.startswith("запусти "):
+            app_name = command.split("запусти ")[-1].strip().lower()
+            app_path = app.applications.get(app_name)
+            if app_path:
+                try:
+                    os.startfile(app_path)
+                    print(f"Запущено приложение: {app_name}")
+                except Exception as e:
+                    print(f"Не удалось запустить приложение '{app_name}': {e}")
+            else:
+                print(f"Приложение с названием '{app_name}' не найдено.")
         else:
             print("Неизвестная команда.")

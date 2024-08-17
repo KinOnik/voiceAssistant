@@ -20,14 +20,11 @@ class VoiceAssistantApp:
 
         self.entry = tk.Entry(root)
         self.entry.pack(pady=10)
-        self.entry.bind("<Return>", self.on_enter)  # Обработка нажатия клавиши Enter
+        self.entry.bind("<Return>", self.on_enter)
 
         self.mic_var = tk.StringVar(root)
         self.mic_list = self.list_microphones()
         self.mic_var.set(self.mic_list[self.selected_mic_index])
-
-        self.mic_menu = tk.OptionMenu(root, self.mic_var, *self.mic_list, command=self.update_microphone)
-        self.mic_menu.pack()
 
         self.recognizer = sr.Recognizer()
         self.microphone = sr.Microphone(device_index=self.selected_mic_index)
@@ -40,40 +37,7 @@ class VoiceAssistantApp:
 
         self.apply_theme()
 
-        if self.listen_enabled:
-            self.start_wake_word_thread()
-
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
-        
-    def start_wake_word_thread(self):
-        threading.Thread(target=self.listen_for_wake_word).start()
-
-    def listen_for_wake_word(self):
-        try:
-            while self.listen_enabled:
-                with self.microphone as source:
-                    self.recognizer.adjust_for_ambient_noise(source)
-                    print("Жду ключевую фразу...")
-                    audio = self.recognizer.listen(source)
-                    try:
-                        command = self.recognizer.recognize_google(audio, language="ru-RU").lower()
-                        if "привет" in command:
-                            self.log("Активирован по ключевой фразе")
-                            self.root.after(0, self.start_recognition_thread)  # Используем after для вызова в основном потоке
-                    except sr.UnknownValueError:
-                        continue
-                    except sr.RequestError as e:
-                        self.log(f"Ошибка при обращении к сервису: {e}")
-        except Exception as e:
-            self.log(f"Произошла ошибка: {e}")
-
-
-
-    def update_microphone(self, selection):
-        self.selected_mic_index = self.mic_list.index(selection)
-        self.microphone = sr.Microphone(device_index=self.selected_mic_index)
-        self.save_settings()
-        self.log(f"Микрофон изменен на: {selection}")
 
     def start_recognition_thread(self):
         threading.Thread(target=self.recognize_speech).start()
@@ -95,14 +59,14 @@ class VoiceAssistantApp:
                 self.log(f"Ошибка при обращении к сервису: {e}")
 
     def process_command(self, command):
-            execute_command(command)
-            save_command(command, "OK")
-            
+        execute_command(command, self)
+        save_command(command, "OK")
+
     def on_enter(self, event):
         command = self.entry.get().lower()
         self.log(f"Вы ввели: {command}")
         self.process_command(command)
-        self.entry.delete(0, tk.END)  # Очищаем поле ввода после отправки команды
+        self.entry.delete(0, tk.END)
 
     def log(self, message):
         self.history.config(state="normal")
@@ -121,16 +85,19 @@ class VoiceAssistantApp:
                 self.selected_mic_index = settings.get('selected_mic_index', 0)
                 self.light_theme = settings.get('light_theme', True)
                 self.listen_enabled = settings.get('listen_enabled', True)
+                self.applications = settings.get('applications', {})
         else:
             self.selected_mic_index = 0
             self.light_theme = True
             self.listen_enabled = True
+            self.applications = {}
 
     def save_settings(self):
         settings = {
             'selected_mic_index': self.selected_mic_index,
             'light_theme': self.light_theme,
-            'listen_enabled': self.listen_enabled
+            'listen_enabled': self.listen_enabled,
+            'applications': self.applications
         }
         with open(self.settings_file, 'w') as file:
             json.dump(settings, file)
@@ -146,11 +113,12 @@ class VoiceAssistantApp:
             self.entry.config(bg="black", fg="white")
 
     def on_closing(self):
-        # Остановка фоновых потоков и выход из программы
         self.listen_enabled = False
+        self.wake_word_listening = False
+        self.currently_listening = False
         self.root.destroy()
-        os._exit(0)  # Принудительное завершение всех процессов
-        
+        os._exit(0)
+
 def start_gui():
     root = tk.Tk()
     app = VoiceAssistantApp(root)
