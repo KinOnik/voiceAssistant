@@ -16,10 +16,11 @@ class VoiceAssistantApp:
         self.load_settings()
 
         self.history = tk.Text(root, state="disabled")
-        self.history.pack()
+        self.history.pack(pady=10)
 
         self.entry = tk.Entry(root)
-        self.entry.pack()
+        self.entry.pack(pady=10)
+        self.entry.bind("<Return>", self.on_enter)  # Обработка нажатия клавиши Enter
 
         self.mic_var = tk.StringVar(root)
         self.mic_list = self.list_microphones()
@@ -32,16 +33,18 @@ class VoiceAssistantApp:
         self.microphone = sr.Microphone(device_index=self.selected_mic_index)
 
         self.recognize_button = tk.Button(root, text="Распознать речь", command=self.start_recognition_thread)
-        self.recognize_button.pack()
+        self.recognize_button.pack(pady=5)
 
         self.settings_button = tk.Button(root, text="Настройки", command=lambda: open_settings(root, self))
-        self.settings_button.pack()
+        self.settings_button.pack(pady=5)
 
         self.apply_theme()
 
         if self.listen_enabled:
             self.start_wake_word_thread()
 
+        self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
+        
     def start_wake_word_thread(self):
         threading.Thread(target=self.listen_for_wake_word).start()
 
@@ -54,7 +57,7 @@ class VoiceAssistantApp:
                     audio = self.recognizer.listen(source)
                     try:
                         command = self.recognizer.recognize_google(audio, language="ru-RU").lower()
-                        if "привет, помощник" in command:
+                        if "привет" in command:
                             self.log("Активирован по ключевой фразе")
                             self.root.after(0, self.start_recognition_thread)  # Используем after для вызова в основном потоке
                     except sr.UnknownValueError:
@@ -92,11 +95,14 @@ class VoiceAssistantApp:
                 self.log(f"Ошибка при обращении к сервису: {e}")
 
     def process_command(self, command):
-        if command in commands:
             execute_command(command)
             save_command(command, "OK")
-        else:
-            self.log("Неизвестная команда.")
+            
+    def on_enter(self, event):
+        command = self.entry.get().lower()
+        self.log(f"Вы ввели: {command}")
+        self.process_command(command)
+        self.entry.delete(0, tk.END)  # Очищаем поле ввода после отправки команды
 
     def log(self, message):
         self.history.config(state="normal")
@@ -139,6 +145,12 @@ class VoiceAssistantApp:
             self.history.config(bg="black", fg="white")
             self.entry.config(bg="black", fg="white")
 
+    def on_closing(self):
+        # Остановка фоновых потоков и выход из программы
+        self.listen_enabled = False
+        self.root.destroy()
+        os._exit(0)  # Принудительное завершение всех процессов
+        
 def start_gui():
     root = tk.Tk()
     app = VoiceAssistantApp(root)

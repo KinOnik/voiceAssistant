@@ -1,11 +1,15 @@
-from pycaw.pycaw import AudioUtilities, ISimpleAudioVolume
+import re
+from ctypes import cast, POINTER
+from comtypes import CLSCTX_ALL
+from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
 
 def get_audio_interface():
     devices = AudioUtilities.GetSpeakers()
     interface = devices.Activate(
-        ISimpleAudioVolume._iid_,
-        AudioUtilities.CLSCTX_ALL,
+        IAudioEndpointVolume._iid_,
+        CLSCTX_ALL,
         None)
+    interface = cast(interface, POINTER(IAudioEndpointVolume))
     return interface
 
 def change_volume(delta):
@@ -24,7 +28,6 @@ def set_volume(level):
 commands = {
     "увеличь громкость": lambda: change_volume(10),
     "уменьши громкость": lambda: change_volume(-10),
-    "установи громкость": lambda: set_volume(76),
 }
 
 def execute_command(command):
@@ -32,4 +35,9 @@ def execute_command(command):
         print(f"Выполняется команда: {command}")
         commands[command]()
     else:
-        print("Неизвестная команда.")
+        match = re.search(r'установи громкость (\d+)', command)
+        if match:
+            level = int(match.group(1))
+            set_volume(level)
+        else:
+            print("Неизвестная команда.")
