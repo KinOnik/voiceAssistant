@@ -29,7 +29,7 @@ commands = {
 
 def execute_command(command):
     if command in commands:
-        print(f"Выполняется команда: {command}")  # Отладочное сообщение
+        print(f"Выполняется команда: {command}")
         commands[command]()
     else:
         print("Неизвестная команда.")

@@ -7,10 +7,17 @@ def init_db():
     conn.commit()
     conn.close()
 
-
 def save_command(command, response):
     conn = sqlite3.connect('history.db')
     c = conn.cursor()
     c.execute("INSERT INTO history (command, response) VALUES (?, ?)", (command, response))
     conn.commit()
     conn.close()
+
+def load_history():
+    conn = sqlite3.connect('history.db')
+    c = conn.cursor()
+    c.execute("SELECT command, response FROM history")
+    rows = c.fetchall()
+    conn.close()
+    return rows
