@@ -3,3 +3,5 @@
 SpeechRecognition
 pycaw
 pyaudio
+pygame
+keyboard
