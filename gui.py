@@ -16,7 +16,7 @@ class VoiceAssistantApp:
         self.root.title("Voice Assistant")
    
         self.window_width = 666
-        self.window_height = 556
+        self.window_height = 530
         self.root.minsize(self.window_width, self.window_height)
         self.root.geometry(f"{self.window_width}x{self.window_height}")
         self.center_window()
@@ -27,33 +27,29 @@ class VoiceAssistantApp:
         self.history = tk.Text(root, state="disabled")
         self.history.pack(pady=10)
 
-        self.entry = tk.Entry(root)
-        self.entry.pack(pady=10)
-        self.entry.bind("<Return>", self.on_enter)
-
         self.mic_var = tk.StringVar(root)
         self.mic_list = self.list_microphones()
         self.mic_var.set(self.mic_list[self.selected_mic_index])
 
         self.microphone = sr.Microphone(device_index=self.selected_mic_index)
 
+        self.status_label = tk.Label(root, text="Ожидание")
+        self.status_label.pack(pady=[5,15])
+        
         self.recognize_button = tk.Button(root, text="Распознать речь", command=self.start_recognition_thread)
         self.recognize_button.pack(pady=5)
 
         self.settings_button = tk.Button(root, text="Настройки", command=lambda: open_settings(root, self))
         self.settings_button.pack(pady=5)
 
-        self.status_label = tk.Label(root, text="Ожидание")
-        self.status_label.pack(pady=5)
-
         self.apply_theme()
 
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
         
         pygame.init()
-        self.start_sound = pygame.mixer.Sound(os.path.join('musik', 'start.wav'))
-        self.stop_sound = pygame.mixer.Sound(os.path.join('musik', 'stop.wav'))
-        self.error_sound = pygame.mixer.Sound(os.path.join('musik', 'error.wav'))
+        self.start_sound = pygame.mixer.Sound(os.path.join('musiс', 'start.wav'))
+        self.stop_sound = pygame.mixer.Sound(os.path.join('musiс', 'stop.wav'))
+        self.error_sound = pygame.mixer.Sound(os.path.join('musiс', 'error.wav'))
         
         if self.listen_enabled:
             self.start_background_listening()
@@ -132,12 +128,6 @@ class VoiceAssistantApp:
     def play_error_sound(self):
         self.error_sound.play()
 
-    def on_enter(self, event):
-        command = self.entry.get().lower()
-        self.log(f"Вы ввели: {command}")
-        self.process_command(command)
-        self.entry.delete(0, tk.END)
-
     def log(self, message):
         self.history.config(state="normal")
         self.history.insert(tk.END, f"{message}\n")
@@ -155,13 +145,7 @@ class VoiceAssistantApp:
                 self.selected_mic_index = settings.get('selected_mic_index', 0)
                 self.light_theme = settings.get('light_theme', True)
                 self.applications = settings.get('applications', {})
-                self.sites = settings.get('sites', {
-                                                        'вк': 'https://vk.com/',
-                                                        'вконтакте': 'https://vk.com/',
-                                                        'ютуб': 'https://www.youtube.com/',
-                                                        'youtube': 'https://www.youtube.com/',
-                                                        'твич': 'https://www.twitch.tv/',
-                                                        'twitch': 'https://www.twitch.tv/'})
+                self.sites = settings.get('sites', {})
                 self.listen_enabled = settings.get('listen_enabled', True)
                 self.wake_word = settings.get('wake_word', 'ассистент привет')
         else:
@@ -169,12 +153,10 @@ class VoiceAssistantApp:
             self.light_theme = True
             self.applications = {}
             self.sites = {
-            'вк': 'https://vk.com/',
-            'вконтакте': 'https://vk.com/',
-            'ютуб': 'https://www.youtube.com/',
-            'youtube': 'https://www.youtube.com/',
-            'твич': 'https://www.twitch.tv/',
-            'twitch': 'https://www.twitch.tv/'
+            'вк': 'https://vk.com',
+            'вконтакте': 'https://vk.com',
+            'рутуб': 'https://rutube.ru',
+            'rutube': 'https://rutube.ru'
             }
             self.listen_enabled = True
             self.wake_word = 'ассистент привет' 
@@ -196,11 +178,9 @@ class VoiceAssistantApp:
         if self.light_theme:
             self.root.config(bg="white")
             self.history.config(bg="white", fg="black")
-            self.entry.config(bg="white", fg="black")
         else:
             self.root.config(bg="black")
             self.history.config(bg="black", fg="white")
-            self.entry.config(bg="black", fg="white")
 
     def on_closing(self):
         self.listen_enabled = False
@@ -211,3 +191,6 @@ def start_gui():
     root = tk.Tk()
     app = VoiceAssistantApp(root)
     root.mainloop()
+
+if __name__ == "__main__":
+    start_gui()

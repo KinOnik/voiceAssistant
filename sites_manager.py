@@ -20,7 +20,7 @@ class SitesManager:
 
         tk.Button(self.window, text="Редактировать", command=self.edit_site).pack(side=tk.LEFT, padx=10, pady=10)
         tk.Button(self.window, text="Удалить", command=self.delete_site).pack(side=tk.LEFT, padx=10, pady=10)
-        tk.Button(self.window, text="Добавить новое", command=self.add_new_site).pack(side=tk.RIGHT, padx=10, pady=10)
+        tk.Button(self.window, text="Добавить новый", command=self.add_new_site).pack(side=tk.RIGHT, padx=10, pady=10)
 
     def center_window(self, window):
         screen_width = self.window.winfo_screenwidth()
