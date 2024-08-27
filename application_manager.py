@@ -54,8 +54,8 @@ class ApplicationManager:
         self.edit_window = tk.Toplevel(self.window)
         self.edit_window.title("Редактирование приложения" if not new else "Добавление нового приложения")
         
-        self.window_edit_width = 320
-        self.window_edit_height = 110
+        self.window_edit_width = 460
+        self.window_edit_height = 110  
         self.edit_window.minsize(self.window_edit_width, self.window_edit_height)
         
         screen_width = self.window.winfo_screenwidth()
@@ -74,8 +74,10 @@ class ApplicationManager:
         self.path_var = tk.StringVar(self.edit_window, value=old_path)
         tk.Entry(self.edit_window, textvariable=self.path_var).grid(row=1, column=1, sticky="ew", padx=10, pady=5)
 
+        tk.Button(self.edit_window, text="Выбрать файл", command=self.select_app_path).grid(row=1, column=2, sticky="ew", padx=10, pady=5)
+
         save_button_text = "Сохранить изменения" if not new else "Добавить приложение"
-        tk.Button(self.edit_window, text=save_button_text, command=lambda: self.save_site(old_name)).grid(row=2, column=0, columnspan=2, pady=10)
+        tk.Button(self.edit_window, text=save_button_text, command=lambda: self.save_application(old_name)).grid(row=2, column=0, columnspan=3, pady=10)
 
         self.edit_window.grid_columnconfigure(1, weight=1)
 
